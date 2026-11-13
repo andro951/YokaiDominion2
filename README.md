@@ -39,3 +39,6 @@ No open-source license is assigned to Isaac's original code or original project 
 The next quality work is combat feel and animation/rig cleanup, stronger bots and body/path collision, consistent environment art, then a real authoritative multiplayer/vision layer. Final character animation, volumetric tissue, cloth collision, full item roster, projectile interception, balance, accessibility and target-GPU profiling remain unfinished. See `docs/ROADMAP.md` for acceptance criteria.
 
 During active work, save and verify remote GitHub checkpoints every **5–10 minutes**, targeting five. This applies to code and actual generated art assets, not just promises or scripts. See `AGENTS.md`. No background development is implied.
+
+## New design discussion: November 13
+Isaac's latest [design thoughts](docs/design/DESIGN_THOUGHTS_2026-11-13.md) explore a casual, short-match, objective-focused direction: shared jungle, team XP and recapturable resource sites with lane offense/defense choices. They distinguish preferences from unresolved alternatives. This is documentation only; none of these new concepts is claimed implemented. Resolve the open map/economy questions before implementing a redesign.

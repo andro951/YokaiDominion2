@@ -48,3 +48,6 @@ Next: an input-driven full-match playthrough, combat/camera readability and atta
 
 ## Checkpoints and handoff
 Source and actual generated asset binaries were checkpointed to GitHub repeatedly throughout active development, with remote branch/readback verification. Continue verified saves every 5–10 minutes, targeting five. No background development is implied after an active response ends. YokaiDominion2 is the active repository; earlier repositories remain read-only sources unless Isaac authorizes changes.
+
+## Later design discussion recorded: November 13
+Added [Isaac's design thoughts](design/DESIGN_THOUGHTS_2026-11-13.md), including the desired casual URF-like experience, evolving reward ideas and recapturable resource-site/bunker concept. No gameplay or build files changed. The next design step is to reconcile the map, objectives, lane orders and economy; earlier verification above applies only to the existing prototype. This documentation was checked against the voice discussion and read back from GitHub; no new runtime testing is implied.
