@@ -1,0 +1,15 @@
+[gd_scene load_steps=5 format=3]
+[ext_resource type="Script" path="res://Scripts/Game.cs" id="1_game"]
+[ext_resource type="Script" path="res://Scripts/StaticBatcher.cs" id="2_batch"]
+[ext_resource type="Script" path="res://Scripts/EquipmentOverlay.cs" id="3_equipment"]
+[ext_resource type="Script" path="res://Scripts/UiReview.cs" id="4_review"]
+[node name="YokaiDominion" type="Node3D"]
+script = ExtResource("1_game")
+[node name="StaticBatcher" type="Node" parent="."]
+script = ExtResource("2_batch")
+[node name="EquipmentLayer" type="CanvasLayer" parent="."]
+layer = 5
+[node name="EquipmentOverlay" type="Control" parent="EquipmentLayer"]
+script = ExtResource("3_equipment")
+[node name="UiReview" type="Node" parent="."]
+script = ExtResource("4_review")

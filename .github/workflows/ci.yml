@@ -1,6 +1,11 @@
 name: Build and regression tests
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'assets/*.md'
   pull_request:
 permissions:
   contents: read
@@ -45,7 +50,7 @@ jobs:
         run: dotnet build src/Yokai.Client/Yokai.Client.csproj -c Debug
       - name: Download pinned Godot .NET editor
         run: bash scripts/install-godot.sh
-      - name: Import, inspect actual poses, and render match
+      - name: Import, inspect poses, exercise HUD, and render match
         shell: bash
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
@@ -55,10 +60,12 @@ jobs:
           "$editor" --headless --editor --path src/Yokai.Client --import --quit 2>&1 | tee artifacts/import.log
           timeout 120 xvfb-run -a "$editor" --path src/Yokai.Client res://Scenes/CharacterReview.tscn --resolution 1280x720 --fixed-fps 60 --rendering-method gl_compatibility --audio-driver Dummy -- --capture="$PWD/artifacts/character-poses.png" 2>&1 | tee artifacts/character-review.log
           grep -q CHARACTER_REVIEW_OK artifacts/character-review.log
+          timeout 120 xvfb-run -a "$editor" --path src/Yokai.Client res://Scenes/UiReview.tscn --resolution 1280x720 --fixed-fps 60 --rendering-method gl_compatibility --audio-driver Dummy -- --capture="$PWD/artifacts/ui" 2>&1 | tee artifacts/ui-review.log
+          grep -q UI_REVIEW_OK artifacts/ui-review.log
           timeout 300 xvfb-run -a "$editor" --path src/Yokai.Client --resolution 960x540 --fixed-fps 60 --rendering-method gl_compatibility --audio-driver Dummy -- --smoke --capture="$PWD/artifacts/arena.png" 2>&1 | tee artifacts/client.log
           grep -q SMOKE_OK artifacts/client.log
           grep -q CHARACTER_AVATAR_OK artifacts/client.log
-          if grep -E 'SCRIPT ERROR|ERROR:' artifacts/client.log artifacts/character-review.log; then exit 1; fi
+          if grep -E 'SCRIPT ERROR|ERROR:' artifacts/client.log artifacts/character-review.log artifacts/ui-review.log; then exit 1; fi
           cp src/Yokai.Client/Assets/Characters/Character01_Game001.glb artifacts/
           cp src/Yokai.Client/Assets/Characters/Character01_Game001.json artifacts/
       - uses: actions/upload-artifact@v4

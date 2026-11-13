@@ -1,28 +1,27 @@
-# Playing Yokai Dominion — development vertical slice
+# Playing Yokai Dominion — 0.1.0-dev
 
-## Windows build
-Extract the ENTIRE ZIP into a folder, then run `YokaiDominion.exe`. Keep the `.pck` and `data_*` directory beside the executable. Do not run the executable directly from inside the ZIP or move it away from its supporting files. This is an unsigned development build, not a signed retail release. Only run a build from this repository or the package supplied by the developer; do not disable antivirus protections.
+## Windows
+Extract the ENTIRE ZIP, then run `YokaiDominion.exe`. Keep the `.pck` and `data_*` directory beside it. Do not run the executable from inside the ZIP or move it away from its supporting files. No Godot editor or .NET SDK installation is needed: the package includes its runtime.
 
-The Windows target is x86-64. The default renderer is Forward+. For graphics-driver problems, start `YokaiDominion.exe --rendering-method gl_compatibility` from a terminal. F10 switches effects quality, not the rendering backend.
+This is an unsigned development build, not a signed retail release. Only run builds from this project; do not disable antivirus protections. The default renderer is Forward+. For graphics-driver trouble, use `Launch-Compatibility.bat`, which selects OpenGL without changing your system settings. F10 changes effect quality, not the rendering backend.
 
-## Linux build
-Extract all files, run `chmod +x YokaiDominion.x86_64`, then launch `./YokaiDominion.x86_64`. Keep all supporting files. The compatibility-renderer argument above also works here.
+## Linux
+Extract all files, run `chmod +x YokaiDominion.x86_64`, then launch `./YokaiDominion.x86_64`. The optional argument `--rendering-method gl_compatibility` selects OpenGL. Keep all supporting files.
 
 ## Match
-Select ENTER THE BATTLEFIELD or press Enter. You control Vaelira for Dawn. Destroy the Dusk shrine while protecting your shrine. Three lanes produce minion waves; towers attack enemies, a bot controls the opposing champion, and your champion respawns after death. Equipment is bought at your shrine. Replaced items go into shrine storage.
+Press Enter or choose ENTER THE BATTLEFIELD. Control Vaelira for Dawn and destroy the Dusk shrine. Three lanes produce minion waves, towers attack enemies, a bot controls the opposing champion, and your champion respawns after death. Buy or swap equipment at your shrine. Replaced and unequipped items are stored rather than destroyed.
 
 ## Controls
-- Right-click ground: move. Right-click an enemy: attack/chase.
-- A, then click: attack-move. S: stop.
-- Q: timed fist combo, or melee kick with a non-fist weapon. Pre-hit Q queues a second strike on the next basic attack; Q immediately after that empowered hit is a free kick.
-- W: start a fresh attack windup and refresh Q. E: trip nearby enemies. R: leap to the cursor and slam, with bonus damage against knocked-down enemies.
-- Hold Q/W/E/R: repeat on readiness, with the free Q kick taking priority. Holding Q does NOT optimize its timing for you.
-- B: open/close shrine armory. You must be alive and at base to purchase or swap stored gear. Use the hand-target button for off-hand weapons.
-- 1/2/3: allocate Strength/Dexterity/Intelligence points. Ctrl+Q/W/E/R: spend an ability-upgrade point.
-- Arrow keys: pan. Space: follow Vaelira. Mouse wheel: zoom. Minimap left-click: pan; right-click: move.
-- Escape: pause/close menu. F1: field guide. F10: visual quality. F11: fullscreen. M: mute.
+- Right-click ground: move. Right-click enemy: attack/chase. A then click: attack-move. S: stop.
+- Q: timed fist combo, or a melee kick with other weapons. Pre-hit Q queues extra damage on the next basic attack; Q immediately after that empowered hit gives a free kick.
+- W: start a new attack windup and refresh Q. E: trip nearby enemies. R: leap to the cursor and slam, with bonus damage against knocked-down enemies.
+- Hold Q/W/E/R: repeat on readiness. This does not optimize combo timing for you.
+- B: shrine armory. Use HAND TARGET for off-hand weapons. **Right-click an equipped item in the armory's bottom equipment list to move it into storage.** Store both gloves before changing to another weapon category. A Strength item cannot be removed while held weapons require its bonus.
+- 1/2/3: spend Strength/Dexterity/Intelligence points. Ctrl+Q/W/E/R: upgrade an ability. Each rank reduces that ability's base cooldown; exact W/E/R curves are provisional.
+- Arrows: pan. Space: follow. Wheel: zoom. Minimap left-click: pan; right-click: move.
+- Escape: pause/close menu. F1: field guide. F10: quality. F11: fullscreen. M: mute.
 
-## Development limitations
-This is a FIRST LOCAL VERTICAL SLICE, not a finished or online MOBA. Hero meshes are articulated proxies, not final Vaelira art. Balance values, bot tactics, ability rank progression, map layout, sound, and equipment visuals are provisional. No online multiplayer, fog of war, advanced tissue physics, final animations, full item catalog, or true projectile interception is included yet.
+## Verification and limits
+Build provenance is in BUILD-MANIFEST.json and BUILD-COMMIT.txt; SHA256SUMS.txt covers packaged files. Component notices and character provenance are under licenses/.
 
-Build provenance is recorded in BUILD-COMMIT.txt. Automated launch tests are not a substitute for a full playthrough on your GPU.
+This is a first local playable slice, NOT a finished or online MOBA. The skinned Character01 development visual is not final approved Vaelira art; its movement, cloth and deformation need production work. The map, bots, balance, sound and catalog are also provisional. No online multiplayer, fog of war, volumetric tissue, production cloth physics, complete item roster or true projectile interception is included. Automated launches and HUD checks are not a full playthrough on your GPU.
