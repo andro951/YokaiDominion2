@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/.godot/
+.vs/
+.idea/
+*.user
+*.suo
+exports/
+artifacts/
+.tools/
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+.DS_Store

@@ -1,0 +1,25 @@
+name: Build and regression tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build engine-independent simulation
+        run: dotnet build src/Yokai.Core/Yokai.Core.csproj -c Release
+      - name: Run gameplay regressions
+        run: dotnet run --project tests/Yokai.Core.Tests -c Release
