@@ -1,0 +1,62 @@
+name: Build Character01 game copy
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/art/**'
+      - '.github/workflows/character-game-copy.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: character-game-copy
+  cancel-in-progress: false
+jobs:
+  adapt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch immutable user-owned model and verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .tools artifacts
+          curl -fL --retry 3 https://raw.githubusercontent.com/andro951/YokaiDominion/4bec672d1e7836dec2d0db141ff6236e3c722395/art/checkpoints/portable008/e8a6f76486e9/Character01_Visual008.glb -o .tools/source.glb
+          echo 'bf422fa4e363f9eb4a04fbc2bb9cb306469fdcbba60123bccdd365203e0856f9  .tools/source.glb' | sha256sum --check --strict
+          base=https://download.blender.org/release/Blender4.5
+          curl -fL --retry 3 "$base/blender-4.5.3-linux-x64.tar.xz" -o .tools/blender-4.5.3-linux-x64.tar.xz
+          curl -fL --retry 3 "$base/blender-4.5.3.sha256" -o .tools/blender.sha256
+          (cd .tools && grep ' blender-4.5.3-linux-x64.tar.xz$' blender.sha256 | sha256sum --check --strict)
+          tar -xf .tools/blender-4.5.3-linux-x64.tar.xz -C .tools
+      - name: Optimize and rig a separate game asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          .tools/blender-4.5.3-linux-x64/blender --background --python scripts/art/rig_character.py -- .tools/source.glb src/Yokai.Client/Assets/Characters/Character01_Game001.glb 2>&1 | tee artifacts/character-build.log
+          test -s src/Yokai.Client/Assets/Characters/Character01_Game001.glb
+          grep -q CHARACTER_GAME_RIG_OK artifacts/character-build.log
+      - name: Checkpoint the actual binary and its provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/Yokai.Client/Assets/Characters/Character01_Game001.glb src/Yokai.Client/Assets/Characters/Character01_Game001.json
+          if git diff --cached --quiet; then echo 'Asset already checkpointed'; exit 0; fi
+          git commit -m 'asset: checkpoint optimized Character01 game rig and provenance'
+          git pull --rebase origin main
+          git push origin HEAD:main
+          git rev-parse HEAD | tee artifacts/asset-commit.txt
+          commit=$(git rev-parse HEAD)
+          curl -fL --retry 3 "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$commit/src/Yokai.Client/Assets/Characters/Character01_Game001.glb" -o .tools/readback.glb
+          cmp .tools/readback.glb src/Yokai.Client/Assets/Characters/Character01_Game001.glb
+          echo ASSET_REMOTE_READBACK_OK
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Character01-game-copy-evidence
+          path: artifacts/
+          retention-days: 14
