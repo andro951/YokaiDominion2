@@ -9,7 +9,6 @@ public readonly record struct Attributes(double Strength, double Dexterity, doub
     public static Attributes operator +(Attributes a, Attributes b) => new(a.Strength + b.Strength, a.Dexterity + b.Dexterity, a.Intelligence + b.Intelligence);
     public double Scale(Attributes coefficients) => Strength * coefficients.Strength + Dexterity * coefficients.Dexterity + Intelligence * coefficients.Intelligence;
 }
-
 public sealed record Item(
     string Id, string Name, EquipSlot Slot, int Cost, string Description,
     WeaponKind Weapon = WeaponKind.None, double FlatDamage = 0, Attributes Scaling = default,
@@ -17,7 +16,7 @@ public sealed record Item(
     Attributes Bonus = default, double Armor = 0, double Resistance = 0, double Health = 0,
     double ManaRegen = 0, double Cdr = 0, ArmorMaterial Material = ArmorMaterial.None, string? Set = null);
 
-/// <summary>Numbers not explicitly approved in design notes are prototype tuning, not new design decisions.</summary>
+/// <summary>Numbers not explicitly approved in design notes are prototype tuning.</summary>
 public static class Items
 {
     public static readonly Item Brass = new("brass", "Brass Knuckles", EquipSlot.MainHand, 120,
@@ -77,8 +76,15 @@ public sealed class Loadout
     public int SetCount(string set) => equipped.Where(p => Items.ArmorSlots.Contains(p.Key) && p.Value.Set == set).Count();
     double SetBonus(string set) { var n = SetCount(set); return (n >= 2 ? 12 : 0) + (n >= 3 ? 18 : 0) + (n >= 5 ? 65 : 0); }
     public double RangeBonus => Math.Max(this[EquipSlot.MainHand]?.RangeBonus ?? 0, this[EquipSlot.OffHand]?.RangeBonus ?? 0);
-    public WeaponKind AttackKind => this[EquipSlot.MainHand]?.Weapon ?? WeaponKind.Fist;
-
+    public WeaponKind AttackKind
+    {
+        get
+        {
+            var main = this[EquipSlot.MainHand]?.Weapon ?? WeaponKind.None;
+            var off = this[EquipSlot.OffHand]?.Weapon ?? WeaponKind.None;
+            return main != WeaponKind.None ? main : off != WeaponKind.None ? off : WeaponKind.Fist;
+        }
+    }
     public bool TryEquip(Item item, EquipSlot slot, Attributes innate, out string reason)
     {
         var hand = slot is EquipSlot.MainHand or EquipSlot.OffHand;
@@ -89,9 +95,7 @@ public sealed class Loadout
         var before = equipped.GetValueOrDefault(slot);
         equipped[slot] = item;
         var main = this[EquipSlot.MainHand]; var off = this[EquipSlot.OffHand];
-        // Mixed ranged/melee dual wield is unresolved in the design; do not invent its behavior.
-        var incompatible = main is not null && off?.Weapon is not (null or WeaponKind.None)
-            && main.Weapon != off.Weapon;
+        var incompatible = main is not null && off?.Weapon is not (null or WeaponKind.None) && main.Weapon != off.Weapon;
         var strength = (innate + Bonuses).Strength;
         if (incompatible || strength < (main?.StrengthRequired ?? 0) + (off?.StrengthRequired ?? 0))
         {

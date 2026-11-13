@@ -7,7 +7,7 @@ void Check(string name, Action test)
     catch (Exception e) { Console.Error.WriteLine("FAIL " + name + ": " + e.Message); Environment.ExitCode = 1; }
 }
 void Near(double expected, double actual, double epsilon = 1e-7)
-{ if (Math.Abs(expected - actual) > epsilon) throw new Exception($"Expected {expected}, got {actual}"); }
+{ if (!double.IsFinite(actual) || Math.Abs(expected - actual) > epsilon) throw new Exception($"Expected {expected}, got {actual}"); }
 void True(bool condition) { if (!condition) throw new Exception("Assertion failed"); }
 
 Check("11 equipment slots", () => Near(11, Enum.GetValues<EquipSlot>().Length));
@@ -85,5 +85,30 @@ Check("Hex centers round-trip including negative coordinates", () => {
     for (var q = -20; q <= 20; q++) for (var r = -20; r <= 20; r++) {
         var h = new Hex(q, r); True(Hex.FromWorld(h.Center()) == h);
     }
+});
+Check("Off-hand-only weapons retain ranged and magical attack identity", () => {
+    var h = new Unit { Kind = UnitKind.Champion };
+    True(h.Loadout.TryEquip(Items.Staff, EquipSlot.OffHand, h.Innate, out _));
+    True(h.Loadout.AttackKind == WeaponKind.CastingStaff); True(h.IsRanged); True(!h.Loadout.FistCompatible);
+    Near(18 + h.Stats.Scale(Items.Staff.Scaling), h.AttackDamage);
+    h.Loadout.Remove(EquipSlot.OffHand);
+    True(h.Loadout.TryEquip(Items.Crossbow, EquipSlot.OffHand, h.Innate, out _));
+    True(h.Loadout.AttackKind == WeaponKind.Crossbow); True(h.IsRanged); Near(10.8, h.AttackRange);
+});
+Check("All four ability ranks have a benefit without inflating natural mana regeneration", () => {
+    var h = new Unit { Kind = UnitKind.Champion }; var mana = h.ManaRegen;
+    foreach (var ability in Enum.GetValues<Ability>()) {
+        var previous = h.CooldownFor(ability);
+        for (var rank = 2; rank <= 5; rank++) {
+            h.Ranks[(int)ability] = rank; var next = h.CooldownFor(ability);
+            True(next > 0 && next < previous); previous = next; Near(mana, h.ManaRegen);
+        }
+    }
+    Near(3, h.CooldownFor(Ability.Q)); Near(8, h.CooldownFor(Ability.W));
+    Near(9, h.CooldownFor(Ability.E)); Near(44, h.CooldownFor(Ability.R));
+});
+Check("Respawn clears transient pursuit and combo flags", () => {
+    var h = new Unit { Kind = UnitKind.Champion, BloodScentActive = true, AttackMove = true, Empowered = true, FreeKickUntil = 999 };
+    h.ResetLife(new(-22, 1.7)); True(!h.BloodScentActive && !h.AttackMove && !h.Empowered); True(h.FreeKickUntil < 0);
 });
 Console.WriteLine($"{passed} regression tests passed.");

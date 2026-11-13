@@ -72,13 +72,18 @@ public sealed class Unit
     public double AttackDamage => Kind switch { UnitKind.Champion => Loadout.AttackDamage(Stats), UnitKind.Minion => 23, UnitKind.Tower => 105, _ => 0 };
     public double Speed => Kind == UnitKind.Champion ? 4.8 + Stats.Dexterity * .007 : 2.6;
     public double HealthRegen => Kind == UnitKind.Champion ? .6 + Stats.Strength * .025 + MaxHealth * Stats.Strength * .000006 : 0;
-    // The baseline is intentionally independent of allocated Intelligence and attack speed.
+    // Baseline deliberately excludes rank, allocated Intelligence, CDR and attack speed changes.
     public double ManaRegen => CombatRules.NaturalManaRegen([(20, 4.2), (35, 10), (40, 12), (75, 60)])
         + Math.Max(0, Stats.Intelligence - BaseAttributes.Intelligence) * .08 + Loadout.BonusManaRegen;
     public bool IsRanged => Kind == UnitKind.Tower || Loadout.AttackKind is WeaponKind.Crossbow or WeaponKind.CastingStaff;
     public QWindow CurrentQWindow(double now) => AttackLandAt.HasValue ? QWindow.Prepare : CombatRules.Window(now - LastHitAt, Interval);
+    // W/E/R curves are provisional balance. Every purchased rank now has a real cooldown benefit.
     public double CooldownFor(Ability a) => CombatRules.Cooldown(a switch {
-        Ability.Q => CombatRules.QBaseCooldown(Ranks[0]), Ability.W => 10, Ability.E => 12, _ => 60
+        Ability.Q => CombatRules.QBaseCooldown(Ranks[0]),
+        Ability.W => 10 - .5 * (Math.Clamp(Ranks[1], 1, 5) - 1),
+        Ability.E => 12 - .75 * (Math.Clamp(Ranks[2], 1, 5) - 1),
+        Ability.R => 60 - 4 * (Math.Clamp(Ranks[3], 1, 5) - 1),
+        _ => throw new ArgumentOutOfRangeException(nameof(a))
     }, Loadout.Cdr, AttackSpeedBonus, a is Ability.Q or Ability.W);
     public void ResetLife(V2 at)
     {
@@ -86,5 +91,6 @@ public sealed class Unit
         Bleeds.Clear(); BleedCarry.Clear(); PlateBreakStacks = 0; StunnedUntil = 0;
         AttackLandAt = null; LeapLandAt = null; TargetId = 0; MoveDestination = null; Path.Clear();
         Empowered = false; FreeKickUntil = -1; LastHitAt = -100; NextAttackStartAt = 0;
+        BloodScentActive = false; AttackMove = false;
     }
 }
