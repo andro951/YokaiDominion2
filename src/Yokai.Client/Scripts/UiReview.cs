@@ -17,7 +17,12 @@ public partial class UiReview : Node
     }
     void Check(bool condition, string label)
     {
-        if (!condition) throw new InvalidOperationException("UI REVIEW: " + label);
+        if (!condition)
+        {
+            // Godot logs callback exceptions and continues; explicitly fail the process as well.
+            SetProcess(false); GetTree().Quit(1);
+            throw new InvalidOperationException("UI REVIEW: " + label);
+        }
         assertions++; GD.Print("UI_CHECK_OK " + label);
     }
     void Click(float dx, float dy, MouseButton button = MouseButton.Left)
@@ -47,10 +52,16 @@ public partial class UiReview : Node
             case 14: Click(810, 171); Check(game.World.Player.Loadout[EquipSlot.OffHand]?.Id == "spiked", "buy off-hand glove"); break;
             case 20: Capture("shop"); break;
             case 22: Click(554, 598, MouseButton.Right); Check(game.World.Player.Loadout[EquipSlot.OffHand] is null, "store off-hand glove"); break;
-            case 24: Click(124, 598, MouseButton.Right); Check(game.World.Player.Loadout[EquipSlot.MainHand] is null && game.World.Player.Storage.Count == 2, "store primary without losing either item"); break;
+            case 24:
+                Click(124, 598, MouseButton.Right);
+                Check(game.World.Player.Loadout[EquipSlot.MainHand] is null && game.World.Player.Storage.Count == 2, "store primary without losing either item");
+                // Allow at least one draw to refresh affordability before interacting with the button.
+                game.World.Player.Gold += 300;
+                break;
             case 26:
-                game.World.Player.Gold += 300; Click(734, 100); Click(810, 250);
-                Check(game.World.Player.Loadout[EquipSlot.MainHand]?.Id == "crossbow" && game.World.Player.IsRanged, "change from dual fists to ranged weapon through shop");
+                Click(734, 100); Click(810, 250);
+                Check(game.World.Player.Loadout[EquipSlot.MainHand]?.Id == "crossbow" && game.World.Player.IsRanged,
+                    "change from dual fists to ranged weapon through shop; main=" + (game.World.Player.Loadout[EquipSlot.MainHand]?.Id ?? "empty") + "; " + game.World.Notice);
                 break;
             case 28:
                 var test = new GameWorld(true); test.Player.Gold = 1000;
