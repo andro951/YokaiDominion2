@@ -1,20 +1,23 @@
-# Development status — 2026-11-13 UTC
+# Development status — first C# match milestone, 2026-11-13 UTC
 
-## Current milestone
-A first local three-lane C# MOBA vertical slice, not a production release. Godot 4.7.2 .NET client, .NET 10 simulation. Development is active only during an executing work session.
+## Verified baseline
+At source revision `609fcec283c6e6c702a25c194187521bfaef0e6e`:
+- All 15 rules regressions plus 12 match integration/soak tests pass on Windows and Linux.
+- Godot client compiles on both platforms with warnings treated as errors.
+- Graphical Mesa/Xvfb test completes and captures the actual title screen and match.
+- Standalone desktop builds run `43366617975` succeeds. The exported Linux binary and the exported Windows executable both launch without the editor and complete the scripted runtime test.
+- Static arena geometry is consolidated by material and spatial chunk; moving actors remain separate.
 
-## Implemented
-Continuous movement, hex-derived coordinates, swept terrain collision and hex A*; three lanes, waves, towers, shrine victory, bot opponent, deaths and respawns; Vaelira Q/W/E/R and Blood Scent; eleven equipment slots, hand strength checks, weapon scaling, mixed armor sets, shrine shop and storage, progression, HUD, minimap, camera, pause/settings, original procedural battlefield/proxy actors, impact effects and synthesized audio.
+## Character integration in progress
+The user's existing Character01 Art008 visual master is preserved in the earlier repository. A separate game copy is now committed here at asset revision `bcd135974c4cf46fb929cea171c12aedab112eec`: 148,471 triangles, 16,778,808 bytes, 28 deform bones, 14 materials, embedded textures. Source hash, output hash and license provenance accompany the asset.
 
-## Verification so far
-- Core and Godot client compile on Windows and Linux with zero compiler warnings/errors at e20f1dd.
-- All 15 original rules regression tests passed on both platforms.
-- Godot launched and printed YOKAI_BOOT_OK under Mesa software rendering. The menu screenshot was captured and inspected.
-- The initial graphical smoke run timed out after 100 seconds; no script error was logged. This is not a successful completed runtime test. The next run uses lower render resolution, fixed simulation time per rendered frame, and an explicit longer timeout.
-- Added 12 match-level tests for real Q sequencing, free recasts, knuckle proc counts, non-fist kick range, W windup, storage transactions, navigation, cadence independence, and a two-minute soak. Results pending.
+The client now loads that skinned copy for the development hero and bot, with procedural idle/walk/combat poses and hand equipment sockets. This is NOT a claim of approved final Vaelira likeness, production animation, tissue physics or cloth simulation. Current checks add independent GLB skin validation and a close-up idle/walk/kick render. Results are pending for this new integration until those tests complete.
 
-## Explicit limitations
-Not online multiplayer, final Vaelira art, motion-captured animation, volumetric tissue physics, complete item roster, fog of war, true projectile simulation, full collision between moving bodies, or a finished balanced game. See docs/design/IMPLEMENTATION.md for provisional numbers and unimplemented mechanics.
+## Implemented match
+Three lanes, waves, towers, shrine victory, local bot opponent, deaths and respawns; continuous movement with hex A* and swept terrain collision; Vaelira Q/W/E/R and Blood Scent; eleven slots, per-weapon scaling, combined hand-strength requirements, mixed armor sets, shop/storage and levels; HUD/minimap/camera/pause/settings; source-generated map, effects and audio.
 
-## Next work
-Complete graphical smoke verification, inspect gameplay capture, fix integration regressions, package and verify a standalone desktop build, and replace proxy art through a license-tracked production pipeline.
+## Still production work
+Online authoritative multiplayer, fog/vision, sophisticated bots, full item catalog, real projectile interception, robust moving-body collision, final animations and art direction, volumetric tissue, cloth collision, balance, accessibility/rebinding and target-GPU performance validation. The source-generated map remains development art. Ability-rank effects beyond Q are not yet fully implemented.
+
+## Checkpoints
+Real GitHub commits are made and read back every 5–10 minutes during active work. No autonomous progress occurs after a response ends. The active repository is YokaiDominion2; older repositories are read-only sources unless the owner authorizes changes.
