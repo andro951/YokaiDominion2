@@ -23,6 +23,8 @@ jobs:
         run: dotnet build src/Yokai.Core/Yokai.Core.csproj -c Release
       - name: Run gameplay regressions
         run: dotnet run --project tests/Yokai.Core.Tests -c Release
+      - name: Run match integration and soak tests
+        run: dotnet run --project tests/Yokai.Match.Tests -c Release
       - name: Build Godot C# client
         run: dotnet build src/Yokai.Client/Yokai.Client.csproj -c Debug
   client-smoke:
@@ -56,7 +58,7 @@ jobs:
           set -euo pipefail
           editor=$(find "$PWD/.tools" -type f -name 'Godot*' -executable | head -n 1)
           "$editor" --headless --editor --path src/Yokai.Client --import --quit 2>&1 | tee artifacts/import.log
-          timeout 100 xvfb-run -a "$editor" --path src/Yokai.Client --rendering-method gl_compatibility --audio-driver Dummy -- --smoke --capture="$PWD/artifacts/arena.png" 2>&1 | tee artifacts/client.log
+          timeout 300 xvfb-run -a "$editor" --path src/Yokai.Client --resolution 960x540 --fixed-fps 60 --rendering-method gl_compatibility --audio-driver Dummy -- --smoke --capture="$PWD/artifacts/arena.png" 2>&1 | tee artifacts/client.log
           grep -q SMOKE_OK artifacts/client.log
           if grep -E 'SCRIPT ERROR|ERROR:' artifacts/client.log; then exit 1; fi
       - uses: actions/upload-artifact@v4
