@@ -46,6 +46,7 @@ jobs:
           cp assets/ASSET_LEDGER.md artifacts/windows/ASSET-LEDGER.md
           cp assets/ASSET_LEDGER.md artifacts/linux/ASSET-LEDGER.md
           printf '%s\n' "$GITHUB_SHA" | tee artifacts/windows/BUILD-COMMIT.txt artifacts/linux/BUILD-COMMIT.txt
+          python3 scripts/finish-package.py artifacts/windows artifacts/linux | tee artifacts/evidence/package-audit.log
           git archive --format=zip --output=artifacts/YokaiDominion-source.zip HEAD
       - name: Launch exported Linux binary without the editor
         shell: bash
@@ -54,6 +55,7 @@ jobs:
           chmod +x artifacts/linux/YokaiDominion.x86_64
           timeout 60 artifacts/linux/YokaiDominion.x86_64 --headless --fixed-fps 60 --audio-driver Dummy -- --smoke 2>&1 | tee artifacts/evidence/exported-linux.log
           grep -q SMOKE_OK artifacts/evidence/exported-linux.log
+          grep -q CHARACTER_AVATAR_OK artifacts/evidence/exported-linux.log
           if grep -E 'SCRIPT ERROR|ERROR:' artifacts/evidence/exported-linux.log; then exit 1; fi
       - uses: actions/upload-artifact@v4
         with:
@@ -94,6 +96,7 @@ jobs:
           Get-Content windows-error.log
           if ($process.ExitCode -ne 0) { throw "Game exited $($process.ExitCode)" }
           if (!(Select-String -Path windows-launch.log -Pattern 'SMOKE_OK' -Quiet)) { throw 'Missing completed runtime test marker' }
+          if (!(Select-String -Path windows-launch.log -Pattern 'CHARACTER_AVATAR_OK' -Quiet)) { throw 'Rigged character failed to load in exported game' }
           if (Select-String -Path windows-error.log,windows-launch.log -Pattern 'SCRIPT ERROR|ERROR:' -Quiet) { throw 'Runtime error logged' }
       - uses: actions/upload-artifact@v4
         if: always()
