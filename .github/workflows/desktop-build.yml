@@ -1,0 +1,103 @@
+name: Standalone desktop builds
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'Directory.Build.props'
+      - '.github/workflows/desktop-build.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify core and match behavior before packaging
+        run: |
+          dotnet run --project tests/Yokai.Core.Tests -c Release
+          dotnet run --project tests/Yokai.Match.Tests -c Release
+      - name: Install pinned Godot and export templates
+        run: bash scripts/install-godot.sh --templates
+      - name: Build and export Windows and Linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/windows artifacts/linux artifacts/evidence
+          editor=$(find "$PWD/.tools/editor" -type f -name 'Godot*' -executable | head -n 1)
+          dotnet build src/Yokai.Client/Yokai.Client.csproj -c Debug
+          "$editor" --headless --editor --path src/Yokai.Client --import --quit 2>&1 | tee artifacts/evidence/import.log
+          "$editor" --headless --path src/Yokai.Client --export-release 'Windows Desktop' "$PWD/artifacts/windows/YokaiDominion.exe" 2>&1 | tee artifacts/evidence/windows-export.log
+          "$editor" --headless --path src/Yokai.Client --export-release 'Linux' "$PWD/artifacts/linux/YokaiDominion.x86_64" 2>&1 | tee artifacts/evidence/linux-export.log
+          test -s artifacts/windows/YokaiDominion.exe
+          test -s artifacts/linux/YokaiDominion.x86_64
+          cp docs/PLAYING.md artifacts/windows/READ-ME.md
+          cp docs/PLAYING.md artifacts/linux/READ-ME.md
+          cp assets/ASSET_LEDGER.md artifacts/windows/ASSET-LEDGER.md
+          cp assets/ASSET_LEDGER.md artifacts/linux/ASSET-LEDGER.md
+          printf '%s\n' "$GITHUB_SHA" | tee artifacts/windows/BUILD-COMMIT.txt artifacts/linux/BUILD-COMMIT.txt
+          git archive --format=zip --output=artifacts/YokaiDominion-source.zip HEAD
+      - name: Launch exported Linux binary without the editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x artifacts/linux/YokaiDominion.x86_64
+          timeout 60 artifacts/linux/YokaiDominion.x86_64 --headless --fixed-fps 60 --audio-driver Dummy -- --smoke 2>&1 | tee artifacts/evidence/exported-linux.log
+          grep -q SMOKE_OK artifacts/evidence/exported-linux.log
+          if grep -E 'SCRIPT ERROR|ERROR:' artifacts/evidence/exported-linux.log; then exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YokaiDominion-Windows-x64
+          path: artifacts/windows/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YokaiDominion-Linux-x64
+          path: artifacts/linux/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-build-evidence
+          path: artifacts/evidence/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YokaiDominion-source
+          path: artifacts/YokaiDominion-source.zip
+          retention-days: 30
+  windows-launch:
+    needs: package
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: YokaiDominion-Windows-x64
+          path: game
+      - name: Launch actual exported Windows executable
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath "$PWD/game/YokaiDominion.exe" -ArgumentList @('--headless','--fixed-fps','60','--audio-driver','Dummy','--','--smoke') -PassThru -RedirectStandardOutput "$PWD/windows-launch.log" -RedirectStandardError "$PWD/windows-error.log"
+          if (!$process.WaitForExit(60000)) { $process.Kill(); throw 'Exported Windows game timed out' }
+          Get-Content windows-launch.log
+          Get-Content windows-error.log
+          if ($process.ExitCode -ne 0) { throw "Game exited $($process.ExitCode)" }
+          if (!(Select-String -Path windows-launch.log -Pattern 'SMOKE_OK' -Quiet)) { throw 'Missing completed runtime test marker' }
+          if (Select-String -Path windows-error.log,windows-launch.log -Pattern 'SCRIPT ERROR|ERROR:' -Quiet) { throw 'Runtime error logged' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: exported-windows-launch-evidence
+          path: '*-*.log'
+          retention-days: 14
