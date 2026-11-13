@@ -23,3 +23,45 @@ jobs:
         run: dotnet build src/Yokai.Core/Yokai.Core.csproj -c Release
       - name: Run gameplay regressions
         run: dotnet run --project tests/Yokai.Core.Tests -c Release
+      - name: Build Godot C# client
+        run: dotnet build src/Yokai.Client/Yokai.Client.csproj -c Debug
+  client-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install rendering dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64
+      - name: Build C# client
+        run: dotnet build src/Yokai.Client/Yokai.Client.csproj -c Debug
+      - name: Download pinned Godot .NET editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .tools artifacts
+          base=https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable
+          name=Godot_v4.7.2-stable_mono_linux_x86_64.zip
+          curl -fL --retry 3 "$base/$name" -o ".tools/$name"
+          curl -fL --retry 3 "$base/SHA512-SUMS.txt" -o .tools/SHA512-SUMS.txt
+          (cd .tools && grep " $name$" SHA512-SUMS.txt | sha512sum --check --strict)
+          unzip -q ".tools/$name" -d .tools
+      - name: Import resources and render smoke test
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          set -euo pipefail
+          editor=$(find "$PWD/.tools" -type f -name 'Godot*' -executable | head -n 1)
+          "$editor" --headless --editor --path src/Yokai.Client --import --quit 2>&1 | tee artifacts/import.log
+          timeout 100 xvfb-run -a "$editor" --path src/Yokai.Client --rendering-method gl_compatibility --audio-driver Dummy -- --smoke --capture="$PWD/artifacts/arena.png" 2>&1 | tee artifacts/client.log
+          grep -q SMOKE_OK artifacts/client.log
+          if grep -E 'SCRIPT ERROR|ERROR:' artifacts/client.log; then exit 1; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: client-smoke-evidence
+          path: artifacts/
+          retention-days: 14

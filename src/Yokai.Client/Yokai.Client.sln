@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yokai.Client", "Yokai.Client.csproj", "{8CBF6163-2AE8-410E-B608-4AC515031716}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yokai.Core", "../Yokai.Core/Yokai.Core.csproj", "{1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}"
+EndProject
+Global
+  GlobalSection(SolutionConfigurationPlatforms) = preSolution
+    Debug|Any CPU = Debug|Any CPU
+    ExportDebug|Any CPU = ExportDebug|Any CPU
+    ExportRelease|Any CPU = ExportRelease|Any CPU
+  EndGlobalSection
+  GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {8CBF6163-2AE8-410E-B608-4AC515031716}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {8CBF6163-2AE8-410E-B608-4AC515031716}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {8CBF6163-2AE8-410E-B608-4AC515031716}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+    {8CBF6163-2AE8-410E-B608-4AC515031716}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+    {8CBF6163-2AE8-410E-B608-4AC515031716}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+    {8CBF6163-2AE8-410E-B608-4AC515031716}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+    {1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}.ExportDebug|Any CPU.ActiveCfg = Debug|Any CPU
+    {1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}.ExportDebug|Any CPU.Build.0 = Debug|Any CPU
+    {1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}.ExportRelease|Any CPU.ActiveCfg = Release|Any CPU
+    {1BEE8232-A4A9-43A5-AE66-B60BED8B7E28}.ExportRelease|Any CPU.Build.0 = Release|Any CPU
+  EndGlobalSection
+EndGlobal
